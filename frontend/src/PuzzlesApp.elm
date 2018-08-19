@@ -1,9 +1,10 @@
 port module PuzzlesApp exposing (..)
 
-import Html exposing (Html, text, div, h1, img)
-import Html.Attributes exposing (src)
+import Html exposing (Html, text, div, h1, img, textarea, button, p)
+import Html.Attributes exposing (src, class, defaultValue)
 import Http exposing (Request)
 import Json.Encode
+import Html.Events exposing (onInput, onClick)
 
 
 -------------------------------------------------------------------------------
@@ -17,29 +18,19 @@ main =
         { view = view
         , init = init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = always (renderedAnswerReady RenderedAnswerReady)
         }
 
 
 
 -------------------------------------------------------------------------------
--- MODEL
+-- CONSTANTS
 -------------------------------------------------------------------------------
 
 
-type alias Model =
-    {}
-
-
-init : ( Model, Cmd Msg )
-init =
-    ( {}, compilationCmd helloWorld )
-
-
-
--------------------------------------------------------------------------------
--- UPDATE
--------------------------------------------------------------------------------
+compilationServiceUrl : String
+compilationServiceUrl =
+    "http://localhost:8080/compile"
 
 
 helloWorld : String
@@ -54,13 +45,44 @@ main =
 """
 
 
+
+-------------------------------------------------------------------------------
+-- MODEL
+-------------------------------------------------------------------------------
+
+
+type alias Model =
+    { source : String
+    , currentPuzzleIndex : Int
+    }
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( { source = ""
+      , currentPuzzleIndex = 0
+      }
+    , Cmd.none
+    )
+
+
+
+-------------------------------------------------------------------------------
+-- UPDATE
+-------------------------------------------------------------------------------
+
+
 type Msg
     = CompilationResponse (Result Http.Error String)
+    | SourceUpdated String
+    | SubmitSourceCode
+    | RenderedAnswerReady String
+    | NextPuzzle
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+    case (Debug.log "msg" msg) of
         CompilationResponse result ->
             case (Debug.log "r" result) of
                 Ok javascriptSource ->
@@ -68,6 +90,20 @@ update msg model =
 
                 Err err ->
                     Debug.crash <| toString err
+
+        SourceUpdated source ->
+            ( { model | source = source }, Cmd.none )
+
+        SubmitSourceCode ->
+            ( model, compileStringTransformationFunction model.source )
+
+        RenderedAnswerReady text ->
+            ( model, Cmd.none )
+
+        NextPuzzle ->
+            ( { model | currentPuzzleIndex = model.currentPuzzleIndex + 1 }
+            , Cmd.none
+            )
 
 
 
@@ -81,6 +117,11 @@ view model =
     div []
         [ img [ src "/logo.svg" ] []
         , h1 [] [ text "Elm Puzzles" ]
+        , p [] [ text "Write a function named reverse that reverses a string" ]
+        , textarea [ class "editor", onInput SourceUpdated, defaultValue model.source ] []
+        , button [ onClick SubmitSourceCode ] [ text "Compile" ]
+        , text " "
+        , button [ onClick NextPuzzle ] [ text "Next Puzzle" ]
         , div [] []
         ]
 
@@ -89,11 +130,6 @@ view model =
 -------------------------------------------------------------------------------
 -- REQUESTS
 -------------------------------------------------------------------------------
-
-
-compilationServiceUrl : String
-compilationServiceUrl =
-    "http://localhost:8080/compile"
 
 
 compilationRequest : String -> Request String
@@ -123,6 +159,24 @@ compilationCmd source =
         |> Http.send CompilationResponse
 
 
+compileStringTransformationFunction : String -> Cmd Msg
+compileStringTransformationFunction functionSource =
+    let
+        fullSource =
+            """module Main exposing (main)
+
+import Html exposing (Html)
+
+main : Html msg
+main =
+    Html.text (reverse "Hello, World!")
+
+"""
+                ++ functionSource
+    in
+        compilationCmd (Debug.log "fullSource" fullSource)
+
+
 
 -------------------------------------------------------------------------------
 -- PORTS
@@ -130,3 +184,6 @@ compilationCmd source =
 
 
 port newlyCompiledElmSource : String -> Cmd msg
+
+
+port renderedAnswerReady : (String -> msg) -> Sub msg

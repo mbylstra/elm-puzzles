@@ -1,7 +1,6 @@
 body {
   font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
-  margin: 0;
-  text-align: center;
+  margin: 20px;
   color: #293c4b;
 }
 
@@ -12,4 +11,21 @@ h1 {
 img {
   margin: 20px 0;
   max-width: 200px;
+}
+
+.editor {
+  width: calc(100% - 20px);
+  height: 200px;
+  padding: 10px;
+  font-family: monospace;
+  margin-bottom: 20px;
+}
+ button {
+   padding: 10px;
+ }
+
+.answer {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: #CCC;
 }
