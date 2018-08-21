@@ -3,21 +3,22 @@ import { PuzzlesApp } from './PuzzlesApp.elm';
 
 var puzzlesApp = PuzzlesApp.embed(document.getElementById('root'));
 
-puzzlesApp.ports.newlyCompiledElmSource.subscribe((jsSource) => {
-  if (typeof(Elm) !== "undefined") {
+puzzlesApp.ports.newlyCompiledElmSource.subscribe(jsSource => {
+  if (typeof Elm !== 'undefined') {
     delete Elm.Main;
   }
-  console.log(jsSource);
+  // console.log(jsSource);
 
-  var script = document.createElement("script");
-  script.innerHTML = jsSource
+  var script = document.createElement('script');
+  script.innerHTML = jsSource;
   document.head.appendChild(script);
 
   var answerNode = document.getElementById('compiled');
+  console.log(Elm);
   console.log(Elm.Main);
   Elm.Main.embed(answerNode);
 
   setTimeout(function() {
     puzzlesApp.ports.renderedAnswerReady.send(answerNode.innerText, 0);
-  })
+  });
 });

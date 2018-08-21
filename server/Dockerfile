@@ -16,6 +16,9 @@ RUN npm install
 # If you are building your code for production
 # RUN npm install --only=production
 
+# this will bake in the initial elm std libraries
+RUN elm make --yes
+
 # Bundle app source
 COPY . .
 

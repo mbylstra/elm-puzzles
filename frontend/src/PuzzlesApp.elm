@@ -169,7 +169,7 @@ import Html exposing (Html)
 
 main : Html msg
 main =
-    Html.text (reverse "Hello, World!")
+    Html.text (String.reverse "Hello, World!")
 
 """
                 ++ functionSource
